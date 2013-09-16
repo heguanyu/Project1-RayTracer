@@ -11,6 +11,7 @@
 #include "glm/glm.hpp"
 #include "utilities.h"
 #include <thrust/random.h>
+#include <math.h>
 
 //Some forward declarations
 __host__ __device__ glm::vec3 getPointOnRay(ray r, float t);
@@ -68,18 +69,21 @@ __host__ __device__ glm::vec3 getSignOfRay(ray r){
   return glm::vec3((int)(inv_direction.x < 0), (int)(inv_direction.y < 0), (int)(inv_direction.z < 0));
 }
 
-//TODO: IMPLEMENT THIS FUNCTION
-//Cube intersection test, return -1 if no intersection, otherwise, distance to intersection
-__host__ __device__ float boxIntersectionTest(staticGeom box, ray r, glm::vec3& intersectionPoint, glm::vec3& normal){
 
-    return -1;
+//Cube intersection test, return -1 if no intersection, otherwise, distance to intersection
+
+__host__ __device__ bool CheckInBox(glm::vec3 targ)
+{
+	float x=targ.x;float y=targ.y;float z=targ.z;
+	return (abs(x)<=0.5f+0.0001f && abs(y)<=0.5f+0.0001f && abs(z)<=0.5f+0.0001f);
 }
+
 
 //LOOK: Here's an intersection test example from a sphere. Now you just need to figure out cube and, optionally, triangle.
 //Sphere intersection test, return -1 if no intersection, otherwise, distance to intersection
-__host__ __device__ float sphereIntersectionTest(staticGeom sphere, ray r, glm::vec3& intersectionPoint, glm::vec3& normal){
+__host__ __device__ float sphereIntersection(staticGeom sphere, ray r, glm::vec3& intersectionPoint, glm::vec3& normal, float defaultRadius){
   
-  float radius = .5;
+  float radius = defaultRadius;
         
   glm::vec3 ro = multiplyMV(sphere.inverseTransform, glm::vec4(r.origin,1.0f));
   glm::vec3 rd = glm::normalize(multiplyMV(sphere.inverseTransform, glm::vec4(r.direction,0.0f)));
@@ -87,7 +91,7 @@ __host__ __device__ float sphereIntersectionTest(staticGeom sphere, ray r, glm::
   ray rt; rt.origin = ro; rt.direction = rd;
   
   float vDotDirection = glm::dot(rt.origin, rt.direction);
-  float radicand = vDotDirection * vDotDirection - (glm::dot(rt.origin, rt.origin) - pow(radius, 2));
+  float radicand = vDotDirection * vDotDirection - (glm::dot(rt.origin, rt.origin) - radius*radius);
   if (radicand < 0){
     return -1;
   }
@@ -115,6 +119,75 @@ __host__ __device__ float sphereIntersectionTest(staticGeom sphere, ray r, glm::
   return glm::length(r.origin - realIntersectionPoint);
 }
 
+__host__ __device__ float boxIntersection(staticGeom box, ray r, glm::vec3& intersectionPoint, glm::vec3& normal){
+
+
+ 
+  //float radius=0.9;
+  glm::vec3 ro = multiplyMV(box.inverseTransform, glm::vec4(r.origin,1.0f));
+  glm::vec3 rd = glm::normalize(multiplyMV(box.inverseTransform, glm::vec4(r.direction,0.0f)));
+  ray rt; rt.origin = ro; rt.direction = rd;
+
+  // float vDotDirection = glm::dot(rt.origin, rt.direction);
+  //float radicand = vDotDirection * vDotDirection - (glm::dot(rt.origin, rt.origin) - radius*radius)+0.00001f;
+  //if (radicand < 0){
+  //  return -1;
+  //}
+
+  //float squareRoot = sqrt(radicand);
+  //float firstTerm = -vDotDirection;
+  //float t1 = firstTerm + squareRoot;
+  //float t2 = firstTerm - squareRoot;
+  //
+  //if (t1 < 0 && t2 < 0) {
+  //    return -1;
+  //}
+
+	float t; glm::vec3 x;
+	float maxt=100000000;
+	float finalt=maxt;
+	glm::vec3 hitnormal;
+	
+	if(abs(rd.x)>EPSILON)
+	{//left face
+		t=-(ro.x+0.5f)/rd.x; x=ro+rd*t;
+		if(t>EPSILON && t<finalt && CheckInBox(x)){finalt=t;hitnormal=glm::vec3(-1,0,0);}
+		//right face
+		t=-(ro.x-0.5f)/rd.x; x=ro+rd*t;
+		if(t>EPSILON && t<finalt && CheckInBox(x)){finalt=t;hitnormal=glm::vec3(1,0,0);}
+	}
+	
+	if(abs(rd.y)>EPSILON)
+	{ //bottom face
+		t=-(ro.y+0.5f)/rd.y; x=ro+rd*t;
+		if(t>EPSILON && t<finalt && CheckInBox(x)) {finalt=t;hitnormal=glm::vec3(0,-1,0);}
+		//top face
+		t=-(ro.y-0.5f)/rd.y; x=ro+rd*t;
+		if(t>EPSILON && t<finalt && CheckInBox(x)) {finalt=t;hitnormal=glm::vec3(0,1,0);}
+	}
+		
+	if(abs(rd.z)>EPSILON)
+	{//back face
+		t=-(ro.z+0.5f)/rd.z; x=ro+rd*t;
+		if(t>EPSILON && t<finalt && CheckInBox(x)) {finalt=t;hitnormal=glm::vec3(0,0,-1);}
+		//front face
+		t=-(ro.z-0.5f)/rd.z; x=ro+rd*t;
+		if(t>EPSILON && t<finalt && CheckInBox(x)) {finalt=t;hitnormal=glm::vec3(0,0,1);}
+	}
+	if(finalt>10000000.0f)  return -1;
+
+  glm::vec3 realIntersectionPoint = multiplyMV(box.transform, glm::vec4(getPointOnRay(rt, finalt), 1.0));
+  normal = multiplyMV(box.transform,glm::vec4(hitnormal,0.0));
+  normal=glm::vec3(normal.x,normal.y,normal.z);
+  normal=glm::normalize(normal);
+  intersectionPoint=realIntersectionPoint;
+
+  return glm::length(r.origin - realIntersectionPoint);
+
+ // return finalt;
+
+}
+
 //returns x,y,z half-dimensions of tightest bounding box
 __host__ __device__ glm::vec3 getRadiuses(staticGeom geom){
     glm::vec3 origin = multiplyMV(geom.transform, glm::vec4(0,0,0,1));
@@ -125,7 +198,9 @@ __host__ __device__ glm::vec3 getRadiuses(staticGeom geom){
     float yradius = glm::distance(origin, ymax);
     float zradius = glm::distance(origin, zmax);
     return glm::vec3(xradius, yradius, zradius);
+	
 }
+
 
 //LOOK: Example for generating a random point on an object using thrust.
 //Generates a random point on a given cube
@@ -168,7 +243,7 @@ __host__ __device__ glm::vec3 getRandomPointOnCube(staticGeom cube, float random
     }
     
     glm::vec3 randPoint = multiplyMV(cube.transform, glm::vec4(point,1.0f));
-
+	//randPoint=multiplyMV(cube.transform,glm::vec4(0,0,0,1));
     return randPoint;
        
 }
@@ -176,8 +251,25 @@ __host__ __device__ glm::vec3 getRandomPointOnCube(staticGeom cube, float random
 //TODO: IMPLEMENT THIS FUNCTION
 //Generates a random point on a given sphere
 __host__ __device__ glm::vec3 getRandomPointOnSphere(staticGeom sphere, float randomSeed){
+	double pi=3.14159265358979f;
+	thrust::default_random_engine rng(hash(randomSeed));
+    thrust::uniform_real_distribution<float> u01(0,pi);
+    thrust::uniform_real_distribution<float> u02(-pi,pi);
+	
+	glm::vec3 point(sin((float)u01(rng))*cos((float)u02(rng)),sin((float)u01(rng))*sin((float)u02(rng)),cos((float)u01(rng)));
+	glm::vec3 randPoint = multiplyMV(sphere.transform, glm::vec4(point,1.0f));
+	return randPoint;
+  
+}
+__host__ __device__ glm::vec3 clampColor(glm::vec3 target)
+{
+	return utilityCore::clampRGB(target);
+}
+__host__ __device__ glm::vec3 getRandomPoint(staticGeom x, float randomSeed)
+{
+	if(x.type==0) return getRandomPointOnSphere(x,randomSeed);
+	else if (x.type==1) return getRandomPointOnCube(x,randomSeed);
 
-  return glm::vec3(0,0,0);
 }
 
 #endif

@@ -22,6 +22,7 @@ private:
     int loadMaterial(string materialid);
     int loadObject(string objectid);
     int loadCamera();
+	int loadParameter();
 public:
     scene(string filename);
     ~scene();
@@ -29,6 +30,7 @@ public:
     vector<geom> objects;
     vector<material> materials;
     camera renderCam;
+	ParameterSet parameterSet;
 };
 
 #endif

@@ -38,22 +38,31 @@ __host__ __device__ bool calculateScatterAndAbsorption(ray& r, float& depth, Abs
   return false;
 }
 
-//TODO (OPTIONAL): IMPLEMENT THIS FUNCTION
 __host__ __device__ glm::vec3 calculateTransmissionDirection(glm::vec3 normal, glm::vec3 incident, float incidentIOR, float transmittedIOR) {
-  return glm::vec3(0,0,0);
+  
+  float eta12=incidentIOR/transmittedIOR;
+  float dotNI=glm::dot(normal,incident);
+  float delta=1-eta12*eta12*(1-dotNI*dotNI);
+  if(delta<0) return glm::vec3(0,0,0);
+  return glm::normalize(normal*(-eta12*dotNI-sqrt(delta))+eta12*incident);
 }
 
-//TODO (OPTIONAL): IMPLEMENT THIS FUNCTION
 __host__ __device__ glm::vec3 calculateReflectionDirection(glm::vec3 normal, glm::vec3 incident) {
-  //nothing fancy here
-  return glm::vec3(0,0,0);
+
+	return glm::normalize(incident-normal*(2*glm::dot(normal,incident)));
 }
 
-//TODO (OPTIONAL): IMPLEMENT THIS FUNCTION
-__host__ __device__ Fresnel calculateFresnel(glm::vec3 normal, glm::vec3 incident, float incidentIOR, float transmittedIOR, glm::vec3 reflectionDirection, glm::vec3 transmissionDirection) {
+__host__ __device__ Fresnel calculateFresnel(glm::vec3 normal, glm::vec3 incident, float incidentIOR, float transmittedIOR, float specularExponent) {
   Fresnel fresnel;
 
-  fresnel.reflectionCoefficient = 1;
+  glm::vec3 transmissionDirection=calculateTransmissionDirection(normal,incident,incidentIOR, transmittedIOR);
+  float theta=acos(glm::dot(normal,incident));
+  float phi=acos(glm::dot(normal,transmissionDirection));
+  float x1=tan(theta-phi)/tan(theta+phi);
+  float x2=sin(theta-phi)/sin(theta+phi);
+  x1*=x1;x2*=x2;
+  
+  fresnel.reflectionCoefficient = 0.5f*(x1+x2)*(1-glm::pow(0.99f,specularExponent));
   fresnel.transmissionCoefficient = 0;
   return fresnel;
 }

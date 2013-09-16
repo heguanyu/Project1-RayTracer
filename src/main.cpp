@@ -10,6 +10,7 @@
 //-------------------------------
 //-------------MAIN--------------
 //-------------------------------
+int totalRayNum=0;
 
 int main(int argc, char** argv){
 
@@ -50,6 +51,7 @@ int main(int argc, char** argv){
   // Set up camera stuff from loaded pathtracer settings
   iterations = 0;
   renderCam = &renderScene->renderCam;
+  parameterSet = &renderScene->parameterSet;
   width = renderCam->resolution[0];
   height = renderCam->resolution[1];
 
@@ -123,7 +125,7 @@ void runCuda(){
     
   
     // execute the kernel
-    cudaRaytraceCore(dptr, renderCam, targetFrame, iterations, materials, renderScene->materials.size(), geoms, renderScene->objects.size() );
+    cudaRaytraceCore(dptr, renderCam, parameterSet, targetFrame, iterations, materials, renderScene->materials.size(), geoms, renderScene->objects.size());
     
     // unmap buffer object
     cudaGLUnmapBufferObject(pbo);

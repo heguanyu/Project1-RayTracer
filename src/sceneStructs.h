@@ -12,7 +12,11 @@
 #include <string>
 
 enum GEOMTYPE{ SPHERE, CUBE, MESH };
-
+struct ParameterSet
+{
+	float ks,kd,ka;
+	int shadowRays;
+};
 struct ray {
 	glm::vec3 origin;
 	glm::vec3 direction;
@@ -45,6 +49,7 @@ struct cameraData {
 	glm::vec3 view;
 	glm::vec3 up;
 	glm::vec2 fov;
+	float ambient;
 };
 
 struct camera {
@@ -58,6 +63,7 @@ struct camera {
 	glm::vec3* image;
 	ray* rayList;
 	std::string imageName;
+	float ambient;
 };
 
 struct material{
@@ -71,6 +77,31 @@ struct material{
 	glm::vec3 absorptionCoefficient;
 	float reducedScatterCoefficient;
 	float emittance;
+};
+
+struct staticMaterial{
+	glm::vec3 color;
+	float specularExponent;
+	glm::vec3 specularColor;		//secondary hit specular info
+	float hasReflective;
+	float hasRefractive;
+	float indexOfRefraction;
+	float hasScatter;
+	glm::vec3 absorptionCoefficient;
+	float reducedScatterCoefficient;
+	float emittance;
+};
+
+struct hitInfo
+{
+	bool hit;
+	glm::vec3 hitPoint;
+	glm::vec3 normal;
+	glm::vec3 incidentDir;
+	int hitID;
+	int materialid;	
+	int firsthitmatid;
+	
 };
 
 #endif //CUDASTRUCTS_H

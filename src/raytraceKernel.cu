@@ -44,10 +44,22 @@ __host__ __device__ glm::vec3 generateRandomNumberFromThread(glm::vec2 resolutio
 //TODO: IMPLEMENT THIS FUNCTION
 //Function that does the initial raycast from the camera
 __host__ __device__ ray raycastFromCameraKernel(glm::vec2 resolution, float time, int x, int y, glm::vec3 eye, glm::vec3 view, glm::vec3 up, glm::vec2 fov){
-  ray r;
-  r.origin = glm::vec3(0,0,0);
-  r.direction = glm::vec3(0,0,-1);
-  return r;
+    ray r;
+
+	glm::vec3 A=glm::cross(view,up);
+	glm::vec3 B=glm::cross(A,view);
+	glm::vec3 M=eye+view;
+	glm::vec3 V=B*(glm::length(view)*tan(fov.y)/glm::length(B));
+	glm::vec3 H=A*(glm::length(view)*tan(fov.x)/glm::length(A));
+
+	float t1=(x/resolution.x)*2.0f-1.0f;
+	float t2=(y/resolution.y)*2.0f-1.0f;
+	glm::vec3 P=M-t1*H+t2*V;
+	glm::vec3 R=glm::normalize(P-eye);
+
+	r.origin = eye;
+	r.direction = R;
+	return r;
 }
 
 //Kernel that blacks out a given image buffer
@@ -96,27 +108,283 @@ __global__ void sendImageToPBO(uchar4* PBOpos, glm::vec2 resolution, glm::vec3* 
 
 //TODO: IMPLEMENT THIS FUNCTION
 //Core raytracer kernel
+//first step: ray intersect with the scene
 __global__ void raytraceRay(glm::vec2 resolution, float time, cameraData cam, int rayDepth, glm::vec3* colors,
-                            staticGeom* geoms, int numberOfGeoms){
+                            staticGeom* geoms, int numberOfGeoms, staticMaterial* materials, staticGeom* lights, int numberOfLights, hitInfo* cudahitinfo, ParameterSet ps){
 
   int x = (blockIdx.x * blockDim.x) + threadIdx.x;
   int y = (blockIdx.y * blockDim.y) + threadIdx.y;
   int index = x + (y * resolution.x);
 
-  if((x<=resolution.x && y<=resolution.y)){
 
-    colors[index] = generateRandomNumberFromThread(resolution, time, x, y);
+  if((x<=resolution.x && y<=resolution.y)){
+	
+	ray r=raycastFromCameraKernel(resolution, time, x,  y, cam.position, cam.view, cam.up, cam.fov);
+	glm::vec3 intersectPoint;
+	glm::vec3 normalValue;
+
+	glm::vec3 final_intersectPoint;
+	glm::vec3 final_normal;
+
+	float mindist=1000000000;
+	glm::vec3 outColor(0,0,0);
+	staticMaterial tempMat;
+	float tempd=0;
+	bool isLight=false;
+	staticMaterial targetMat;
+
+	for(int i=0;i<numberOfGeoms;i++)
+	{
+		if(geoms[i].type==0)	//sphere
+		{
+			tempd=sphereIntersection(geoms[i], r, intersectPoint, normalValue,0.5);
+		}
+		else if (geoms[i].type==1)
+		{
+			tempd=boxIntersection(geoms[i], r, intersectPoint, normalValue);
+		}
+		if(tempd>0 && tempd<mindist)
+		{
+			mindist=tempd;
+			final_intersectPoint=intersectPoint;
+			final_normal=normalValue;
+			tempMat=materials[geoms[i].materialid];
+			outColor=tempMat.color;
+			targetMat=tempMat;
+			if(tempMat.emittance>0.5f) isLight=true; else isLight=false;
+			cudahitinfo[index].hit=true;
+			cudahitinfo[index].hitPoint=intersectPoint;
+			cudahitinfo[index].normal=normalValue;
+			cudahitinfo[index].hitID=i;
+			cudahitinfo[index].materialid=geoms[i].materialid;
+			cudahitinfo[index].incidentDir=r.direction;
+		}
+	}
+	colors[index]=outColor*ps.ka;//0.2 ambient
+	if(targetMat.emittance>0.01f) colors[index]=targetMat.color*targetMat.emittance;
+	cudahitinfo[index].firsthitmatid=cudahitinfo[index].materialid;
+  }
+}
+
+
+//SECOND step: addRefelctance//!!!!DISCARDED
+__global__ void addRefelctance(glm::vec2 resolution, float time, cameraData cam, int rayDepth, glm::vec3* colors,
+                            staticGeom* geoms, int numberOfGeoms, staticMaterial* materials, staticGeom* lights, int numberOfLights, hitInfo* cudahitinfo, ParameterSet ps){
+  int x = (blockIdx.x * blockDim.x) + threadIdx.x;
+  int y = (blockIdx.y * blockDim.y) + threadIdx.y;
+  int index = x + (y * resolution.x);
+  ray r;
+  glm::vec3 intersectPoint, normalValue;
+  if((x<=resolution.x && y<=resolution.y)){
+	if(!cudahitinfo[index].hit)return;
+
+	staticMaterial hitMat=materials[cudahitinfo[index].materialid];
+	if(hitMat.hasReflective<1) return;
+
+
+	ray r;
+	r.origin=cudahitinfo[index].hitPoint;
+	normalValue=cudahitinfo[index].normal;
+	glm::vec3 incidentDir=cudahitinfo[index].incidentDir;
+	r.direction=glm::normalize(incidentDir-normalValue*(2*glm::dot(incidentDir,normalValue)));
+	
+
+
+	glm::vec3 final_intersectPoint;
+	glm::vec3 final_normal;
+	glm::vec3 outColor(0,0,0);
+	float mindist=1000000000;
+	float tempd=0;
+	bool isLight=false;
+	
+	staticMaterial targetMat;
+	staticMaterial tempMat;
+
+	for(int i=0;i<numberOfGeoms;i++)
+	{
+		if(geoms[i].type==0)	//sphere
+		{
+			tempd=sphereIntersection(geoms[i], r, intersectPoint, normalValue,0.5);
+		}
+		else if (geoms[i].type==1)
+		{
+			tempd=boxIntersection(geoms[i], r, intersectPoint, normalValue);
+		}
+		if(tempd>0 && tempd<mindist)
+		{
+			mindist=tempd;
+			final_intersectPoint=intersectPoint;
+			final_normal=normalValue;
+			tempMat=materials[geoms[i].materialid];
+			outColor=tempMat.color*tempMat.emittance;
+			targetMat=tempMat;
+			if(tempMat.emittance>0.05f) isLight=true; else isLight=false;
+		}
+	}
+	colors[index]+=outColor;
+//	if(hitMat.specularExponent<EPSILON) colors[index]+=outColor;
+//	else colors[index]+=outColor*pow(abs(glm::dot(incidentDir,cudahitinfo[index].normal)),hitMat.specularExponent);
+  }
+}
+
+//3RD STEP: add Shadow and specular, or else to say, trace the lights
+__global__ void addShadow(glm::vec2 resolution, float time, cameraData cam, int rayDepth, glm::vec3* colors,
+                            staticGeom* geoms, int numberOfGeoms, staticMaterial* materials, staticGeom* lights, int numberOfLights, hitInfo* cudahitinfo, ParameterSet ps){
+
+  int x = (blockIdx.x * blockDim.x) + threadIdx.x;
+  int y = (blockIdx.y * blockDim.y) + threadIdx.y;
+  int index = x + (y * resolution.x);
+  ray r;
+  glm::vec3 intersectPoint, normalValue;
+
+  if((x<=resolution.x && y<=resolution.y)){
+	if(!cudahitinfo[index].hit) return;
+	staticMaterial hitMat=materials[cudahitinfo[index].materialid];
+	if(hitMat.emittance>0.01f) return;
+	glm::vec3 final_intersectPoint=cudahitinfo[index].hitPoint;
+	glm::vec3 final_normal=cudahitinfo[index].normal;
+	
+	float tempd;
+	glm::vec3 outColor=colors[index];
+	glm::vec3 accumulateInLight(0,0,0);
+	glm::vec3 tempLight;
+	glm::vec3 lightRaysSum(0,0,0);
+	bool flag=false;
+	int sampleNum=ps.shadowRays;
+	float coeff=0;
+	r.origin=final_intersectPoint+0.001f*final_normal;
+	for(int i=0;i<numberOfLights;i++)
+	{
+		for(int j=0;j<sampleNum;j++)
+		{
+			if(sampleNum==1)
+				tempLight=lights[i].translation;
+			else
+				tempLight=getRandomPoint(lights[i],j*index);
+			r.direction=glm::normalize(tempLight-r.origin);
+			float mind=0;
+			if(lights[i].type==0) mind=sphereIntersection(lights[i],r,intersectPoint, normalValue,0.5);
+			else if (lights[i].type==1) mind=boxIntersection(lights[i],r,intersectPoint,normalValue);
+			if(mind<0)continue;
+			mind-=0.0001f;
+			flag=false;
+			for(int k=0;k<numberOfGeoms;k++)
+			{
+				if(lights[i].materialid==geoms[k].materialid) continue;
+				if(materials[geoms[k].materialid].hasRefractive>0.5f) continue;
+				if(geoms[k].type==0) tempd=sphereIntersection(geoms[k],r,intersectPoint,normalValue,0.5);
+				else if(geoms[k].type==1) tempd=boxIntersection(geoms[k],r,intersectPoint,normalValue);
+				if(tempd<mind && tempd>0)flag=true;
+				if(flag)break;
+			}
+			if(!flag)
+			{
+				coeff=0;
+				Fresnel f=calculateFresnel(final_normal,r.direction*-1.0f,1,hitMat.indexOfRefraction,hitMat.specularExponent);
+				glm::vec3  R=r.direction*(-1.0f);
+				R=calculateReflectionDirection(final_normal,R);
+				coeff=glm::dot(R,-cudahitinfo[index].incidentDir);
+				if(coeff<0) coeff=0;
+				else
+					coeff=glm::pow(coeff,hitMat.specularExponent)*ps.ks*hitMat.hasReflective;	///specular light intensity
+				
+				//*f.reflectionCoefficient;
+				
+				coeff+=glm::dot(final_normal,r.direction)*ps.kd;    ///Diffuse light intensity
+				accumulateInLight+=materials[lights[i].materialid].color*coeff;
+			}	
+		}
+		accumulateInLight/=sampleNum;
+		accumulateInLight*=materials[lights[i].materialid].emittance;
+		lightRaysSum+=accumulateInLight;
+		accumulateInLight=glm::vec3(0,0,0);
+	}
+	glm::vec3 matcolor=materials[cudahitinfo[index].firsthitmatid].color;
+	outColor=glm::vec3(matcolor.x*lightRaysSum.x,matcolor.y*lightRaysSum.y,matcolor.z*lightRaysSum.z);
+
+	colors[index]+=outColor;
+	
+   }
+}
+//3RD STEP: add Shadow and specular, or else to say, trace the lights
+__global__ void refractionCorrection(glm::vec2 resolution, float time, cameraData cam, int rayDepth, glm::vec3* colors,
+                            staticGeom* geoms, int numberOfGeoms, staticMaterial* materials, staticGeom* lights, int numberOfLights, hitInfo* cudahitinfo, ParameterSet ps){
+
+  int x = (blockIdx.x * blockDim.x) + threadIdx.x;
+  int y = (blockIdx.y * blockDim.y) + threadIdx.y;
+  int index = x + (y * resolution.x);
+  ray r;
+  glm::vec3 intersectPoint, normalValue;
+
+  if((x<=resolution.x && y<=resolution.y)){
+	if(!cudahitinfo[index].hit) return;
+	staticMaterial hitMat=materials[cudahitinfo[index].materialid];
+	
+	if(hitMat.emittance>0.01f) return;
+	if(hitMat.hasRefractive<0.5f)return;
+	glm::vec3 final_intersectPoint=cudahitinfo[index].hitPoint;
+	glm::vec3 final_normal=cudahitinfo[index].normal;
+	
+	float tempd;
+	glm::vec3 outColor(0,0,0);
+	glm::vec3 dir1=calculateTransmissionDirection(final_normal,cudahitinfo[index].incidentDir,1,hitMat.indexOfRefraction);
+	if(glm::length(dir1)<0.5f)return;
+    glm::vec3 hp1=final_intersectPoint+dir1*0.001f;
+	glm::vec3 hp2,normal2;
+	r.origin=hp1;
+	r.direction=dir1;
+	if(geoms[cudahitinfo[index].hitID].type==0) tempd=sphereIntersection(geoms[cudahitinfo[index].hitID],r,hp2,normal2,0.5f);
+	else if (geoms[cudahitinfo[index].hitID].type==1) tempd=boxIntersection(geoms[cudahitinfo[index].hitID],r,hp2,normal2);
+	normal2=-normal2;
+	glm::vec3 dir2=calculateTransmissionDirection(normal2, dir1,hitMat.indexOfRefraction,1);
+	r.origin=hp2+dir2*0.01f;
+	r.direction=dir2;
+
+	float mindist=1000000000;
+	staticMaterial tempMat, targetMat;
+	bool isLight=false;
+	
+	for(int i=0;i<numberOfGeoms;i++)
+	{
+		if(geoms[i].type==0)	//sphere
+		{
+			tempd=sphereIntersection(geoms[i], r, intersectPoint, normalValue,0.5);
+		}
+		else if (geoms[i].type==1)
+		{
+			tempd=boxIntersection(geoms[i], r, intersectPoint, normalValue);
+		}
+		if(tempd>0 && tempd<mindist)
+		{
+			mindist=tempd;
+			final_intersectPoint=intersectPoint;
+			final_normal=normalValue;
+			tempMat=materials[geoms[i].materialid];
+			outColor=tempMat.color;
+			targetMat=tempMat;
+			if(tempMat.emittance>0.5f) isLight=true; else isLight=false;
+			cudahitinfo[index].hit=true;
+			cudahitinfo[index].hitPoint=intersectPoint;
+			cudahitinfo[index].normal=normalValue;
+			cudahitinfo[index].hitID=i;
+			cudahitinfo[index].materialid=geoms[i].materialid;
+			cudahitinfo[index].incidentDir=r.direction;
+		}
+	}
+	colors[index]+=outColor*ps.ka;//0.2 ambient
+	if(targetMat.emittance>0.01f) colors[index]+=targetMat.color*targetMat.emittance;
    }
 }
 
 //TODO: FINISH THIS FUNCTION
 // Wrapper for the __global__ call that sets up the kernel calls and does a ton of memory management
-void cudaRaytraceCore(uchar4* PBOpos, camera* renderCam, int frame, int iterations, material* materials, int numberOfMaterials, geom* geoms, int numberOfGeoms){
+void cudaRaytraceCore(uchar4* PBOpos,camera* renderCam, ParameterSet* pSet, int frame, int iterations, material* materials, int numberOfMaterials, geom* geoms, int numberOfGeoms){
   
   int traceDepth = 1; //determines how many bounces the raytracer traces
 
   // set up crucial magic
   int tileSize = 8;
+  int numberOfLights=0;
   dim3 threadsPerBlock(tileSize, tileSize);
   dim3 fullBlocksPerGrid((int)ceil(float(renderCam->resolution.x)/float(tileSize)), (int)ceil(float(renderCam->resolution.y)/float(tileSize)));
   
@@ -125,6 +393,23 @@ void cudaRaytraceCore(uchar4* PBOpos, camera* renderCam, int frame, int iteratio
   cudaMalloc((void**)&cudaimage, (int)renderCam->resolution.x*(int)renderCam->resolution.y*sizeof(glm::vec3));
   cudaMemcpy( cudaimage, renderCam->image, (int)renderCam->resolution.x*(int)renderCam->resolution.y*sizeof(glm::vec3), cudaMemcpyHostToDevice);
   
+  hitInfo* cudahitinfo= NULL;
+  cudaMalloc((void**)&cudahitinfo,(int)renderCam->resolution.x*(int)renderCam->resolution.y*sizeof(hitInfo));
+
+  hitInfo* hitInfoNullList = new hitInfo[(int)renderCam->resolution.x*(int)renderCam->resolution.y];
+  for(int i=0;i<(int)renderCam->resolution.x*(int)renderCam->resolution.y;i++)
+  {
+	
+	  hitInfoNullList[i].hitPoint=glm::vec3(0,0,0);
+	  hitInfoNullList[i].normal=glm::vec3(0,0,0);
+	  hitInfoNullList[i].hit=false;
+	  hitInfoNullList[i].hitID=0;
+	  hitInfoNullList[i].materialid=0;
+	  hitInfoNullList[i].incidentDir=glm::vec3(0,0,0);
+	  hitInfoNullList[i].firsthitmatid=0;
+  }
+  cudaMemcpy( cudahitinfo,hitInfoNullList,(int)renderCam->resolution.x*(int)renderCam->resolution.y*sizeof(hitInfo), cudaMemcpyHostToDevice);
+
   //package geometry and materials and sent to GPU
   staticGeom* geomList = new staticGeom[numberOfGeoms];
   for(int i=0; i<numberOfGeoms; i++){
@@ -136,13 +421,58 @@ void cudaRaytraceCore(uchar4* PBOpos, camera* renderCam, int frame, int iteratio
     newStaticGeom.scale = geoms[i].scales[frame];
     newStaticGeom.transform = geoms[i].transforms[frame];
     newStaticGeom.inverseTransform = geoms[i].inverseTransforms[frame];
+	if(materials[newStaticGeom.materialid].emittance>0.5f) numberOfLights++;
     geomList[i] = newStaticGeom;
   }
-  
   staticGeom* cudageoms = NULL;
   cudaMalloc((void**)&cudageoms, numberOfGeoms*sizeof(staticGeom));
   cudaMemcpy( cudageoms, geomList, numberOfGeoms*sizeof(staticGeom), cudaMemcpyHostToDevice);
-  
+
+  staticGeom* lightList = new staticGeom[numberOfLights];
+  int now=0;
+  for(int i=0;i<numberOfGeoms;i++)
+  {
+	if(materials[geomList[i].materialid].emittance<=0.5f) continue;
+    staticGeom newStaticGeom;
+    newStaticGeom.type = geoms[i].type;
+    newStaticGeom.materialid = geoms[i].materialid;
+    newStaticGeom.translation = geoms[i].translations[frame];
+    newStaticGeom.rotation = geoms[i].rotations[frame];
+    newStaticGeom.scale = geoms[i].scales[frame];
+    newStaticGeom.transform = geoms[i].transforms[frame];
+    newStaticGeom.inverseTransform = geoms[i].inverseTransforms[frame];
+    lightList[now] = newStaticGeom;
+	now++;
+  }
+
+  staticGeom* cudalights=NULL;
+  cudaMalloc((void**)&cudalights, numberOfLights*sizeof(staticGeom));
+  cudaMemcpy( cudalights, lightList, numberOfLights*sizeof(staticGeom), cudaMemcpyHostToDevice);
+
+
+  staticMaterial* matList = new staticMaterial[numberOfMaterials];
+  for(int i=0; i<numberOfMaterials; i++){
+    staticMaterial newStaticMat;
+
+    newStaticMat.color = materials[i].color;
+    newStaticMat.specularExponent = materials[i].specularExponent;
+    newStaticMat.specularColor = materials[i].specularColor;
+    newStaticMat.hasReflective = materials[i].hasReflective;
+    newStaticMat.hasRefractive = materials[i].hasRefractive;
+    newStaticMat.indexOfRefraction = materials[i].indexOfRefraction;
+	newStaticMat.hasScatter = materials[i].hasScatter;
+	newStaticMat.absorptionCoefficient = materials[i].absorptionCoefficient;
+	newStaticMat.reducedScatterCoefficient = materials[i].reducedScatterCoefficient;
+	newStaticMat.emittance = materials[i].emittance;
+	
+
+    matList[i] = newStaticMat;
+  }
+
+  staticMaterial* cudamats = NULL;
+  cudaMalloc((void**)&cudamats, numberOfMaterials*sizeof(material));
+  cudaMemcpy( cudamats, matList, numberOfMaterials*sizeof(staticMaterial), cudaMemcpyHostToDevice);
+
   //package camera
   cameraData cam;
   cam.resolution = renderCam->resolution;
@@ -150,10 +480,19 @@ void cudaRaytraceCore(uchar4* PBOpos, camera* renderCam, int frame, int iteratio
   cam.view = renderCam->views[frame];
   cam.up = renderCam->ups[frame];
   cam.fov = renderCam->fov;
+  cam.ambient=renderCam->ambient;
+
+  ParameterSet ps;
+  ps.ka=pSet->ka;
+  ps.kd=pSet->kd;
+  ps.ks=pSet->ks;
+  ps.shadowRays=pSet->shadowRays;
 
   //kernel launches
-  raytraceRay<<<fullBlocksPerGrid, threadsPerBlock>>>(renderCam->resolution, (float)iterations, cam, traceDepth, cudaimage, cudageoms, numberOfGeoms);
-
+  raytraceRay<<<fullBlocksPerGrid, threadsPerBlock>>>(renderCam->resolution, (float)iterations, cam, traceDepth, cudaimage, cudageoms, numberOfGeoms , cudamats, cudalights, numberOfLights, cudahitinfo ,ps);
+  addRefelctance<<<fullBlocksPerGrid, threadsPerBlock>>>(renderCam->resolution, (float)iterations, cam, traceDepth, cudaimage, cudageoms, numberOfGeoms , cudamats, cudalights, numberOfLights, cudahitinfo,ps);
+    refractionCorrection<<<fullBlocksPerGrid, threadsPerBlock>>>(renderCam->resolution, (float)iterations, cam, traceDepth, cudaimage, cudageoms, numberOfGeoms , cudamats, cudalights, numberOfLights, cudahitinfo,ps);
+  addShadow<<<fullBlocksPerGrid, threadsPerBlock>>>(renderCam->resolution, (float)iterations, cam, traceDepth, cudaimage, cudageoms, numberOfGeoms , cudamats, cudalights, numberOfLights, cudahitinfo,ps);
   sendImageToPBO<<<fullBlocksPerGrid, threadsPerBlock>>>(PBOpos, renderCam->resolution, cudaimage);
 
   //retrieve image from GPU
@@ -162,7 +501,13 @@ void cudaRaytraceCore(uchar4* PBOpos, camera* renderCam, int frame, int iteratio
   //free up stuff, or else we'll leak memory like a madman
   cudaFree( cudaimage );
   cudaFree( cudageoms );
+  cudaFree( cudamats );
+  cudaFree( cudalights);
+  cudaFree( cudahitinfo);
   delete geomList;
+  delete matList;
+  delete lightList;
+  delete hitInfoNullList;
 
   // make certain the kernel has completed
   cudaThreadSynchronize();

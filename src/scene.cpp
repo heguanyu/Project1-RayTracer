@@ -19,7 +19,11 @@ scene::scene(string filename){
             utilityCore::safeGetline(fp_in,line);
 			if(!line.empty()){
 				vector<string> tokens = utilityCore::tokenizeString(line);
-				if(strcmp(tokens[0].c_str(), "MATERIAL")==0){
+				if(strcmp(tokens[0].c_str(), "PARAMETERS")==0){
+				    loadParameter();
+				    cout << " " << endl;
+				}
+				else if(strcmp(tokens[0].c_str(), "MATERIAL")==0){
 				    loadMaterial(tokens[1]);
 				    cout << " " << endl;
 				}else if(strcmp(tokens[0].c_str(), "OBJECT")==0){
@@ -85,6 +89,9 @@ int scene::loadObject(string objectid){
 	vector<glm::vec3> translations;
 	vector<glm::vec3> scales;
 	vector<glm::vec3> rotations;
+
+
+	
     while (!line.empty() && fp_in.good()){
 	    
 	    //check frame number
@@ -134,13 +141,38 @@ int scene::loadObject(string objectid){
     }
 }
 
+
+int scene::loadParameter(){
+	cout << "Loading Parameters ..." << endl;
+    ParameterSet newPset;
+	float fovy;
+	
+	//load static properties
+	for(int i=0; i<4; i++){
+		string line;
+        utilityCore::safeGetline(fp_in,line);
+		vector<string> tokens = utilityCore::tokenizeString(line);
+		if(strcmp(tokens[0].c_str(), "KD")==0){
+			newPset.kd = atof(tokens[1].c_str());
+		}else if(strcmp(tokens[0].c_str(), "KS")==0){
+			newPset.ks = atof(tokens[1].c_str());
+		}else if(strcmp(tokens[0].c_str(), "KA")==0){
+			newPset.ka = atof(tokens[1].c_str());
+		}else if(strcmp(tokens[0].c_str(), "SHADOWRAYS")==0){
+			newPset.shadowRays = atoi(tokens[1].c_str());
+		}
+	}
+	parameterSet=newPset;
+	return 1;
+}
+
 int scene::loadCamera(){
 	cout << "Loading Camera ..." << endl;
         camera newCamera;
 	float fovy;
 	
 	//load static properties
-	for(int i=0; i<4; i++){
+	for(int i=0; i<5; i++){
 		string line;
         utilityCore::safeGetline(fp_in,line);
 		vector<string> tokens = utilityCore::tokenizeString(line);
@@ -152,6 +184,8 @@ int scene::loadCamera(){
 			newCamera.iterations = atoi(tokens[1].c_str());
 		}else if(strcmp(tokens[0].c_str(), "FILE")==0){
 			newCamera.imageName = tokens[1];
+		}else if(strcmp(tokens[0].c_str(), "AMBIENT")==0){
+			newCamera.ambient = atof(tokens[1].c_str());
 		}
 	}
         
@@ -218,6 +252,7 @@ int scene::loadCamera(){
 	cout << "Loaded " << frameCount << " frames for camera!" << endl;
 	return 1;
 }
+
 
 int scene::loadMaterial(string materialid){
 	int id = atoi(materialid.c_str());
