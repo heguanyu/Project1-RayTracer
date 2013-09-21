@@ -114,7 +114,7 @@ struct hitInfo
 	int hitID;
 	int materialid;	
 	int firsthitmatid;
-	
+	float dof;
 };
 
 #endif //CUDASTRUCTS_H

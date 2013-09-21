@@ -28,6 +28,8 @@ Area Light(same as above)
 
 Shadow of a refractive ball(see the shadow of blue glass ball)
 
+Depth Of Field Blur(it makes things looks AWESOME)
+
 With all the effects on, it runs at about 2fps.
 
 -------------------------------------------------------------------------------

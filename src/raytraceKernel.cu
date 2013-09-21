@@ -182,6 +182,7 @@ __global__ void raytraceRay(glm::vec2 resolution, float time, cameraData cam, in
 		cudahitinfo[index].incidentDir=r.direction;
 
 		cudahitinfo[index].firsthitmatid=cudahitinfo[index].materialid;
+		cudahitinfo[index].dof=glm::dot(final_intersectPoint-cam.position,cam.view);
 		colors[index]+=outColor*subraycoeff;
   }
 }
@@ -229,6 +230,34 @@ __global__ void addRefelctance(glm::vec2 resolution, float time, cameraData cam,
   }
 }
 
+__global__ void dofBlur(glm::vec2 resolution, float time, glm::vec3* toColors, glm::vec3* colors, hitInfo* cudahitinfo)
+{
+  int x = (blockIdx.x * blockDim.x) + threadIdx.x;
+  int y = (blockIdx.y * blockDim.y) + threadIdx.y;
+  int index = x + (y * resolution.x);
+  if((x<=resolution.x && y<=resolution.y)){
+	  toColors[index]=colors[index];
+	  if(!cudahitinfo[index].hit) return;
+	  
+	  float standardDOF=cudahitinfo[(int)(resolution.x*resolution.y/2)].dof;
+	  float myDOF=cudahitinfo[index].dof;
+	  if(abs(myDOF/standardDOF-1.0f)<0.1f) return;
+	  int blurradius=(int)(abs(myDOF/standardDOF-1.0f)/0.1f);
+	  if(blurradius>6) blurradius=6;
+	  int blurnum=0;
+	  toColors[index]=glm::vec3(0,0,0);
+	  for(int i=-blurradius;i<=blurradius;i++) for(int j=-blurradius;j<=blurradius;j++)
+	  {
+		  int xx=x+i, yy=y+j;
+		  if(xx<=0 || xx>resolution.x || yy<=0 || yy>resolution.y) continue;
+		  int newidx=xx+yy*resolution.x;
+		  if(abs(cudahitinfo[newidx].dof/standardDOF-1.0f)<0.1f) continue;
+		  blurnum++;
+		  toColors[index]+=colors[newidx];
+	  }
+	  toColors[index]*=(1.0f/(float)blurnum);
+  }
+}
 //3RD STEP: add Shadow and specular, or else to say, trace the lights
 __global__ void addShadow(glm::vec2 resolution, float time, cameraData cam, int rayDepth, glm::vec3* colors,
                             staticGeom* geoms, int numberOfGeoms, staticMaterial* materials, staticGeom* lights, int numberOfLights, hitInfo* cudahitinfo, ParameterSet ps , glm::vec3* shadow, float subraycoeff){
@@ -541,7 +570,7 @@ void cudaRaytraceCore(uchar4* PBOpos,camera* renderCam, ParameterSet* pSet, int 
   ps.hasSubray=pSet->hasSubray;
 
 
-
+  
   //kernel launches
   clearImage<<<fullBlocksPerGrid, threadsPerBlock>>>(renderCam->resolution, cudaimage);
   int subrays=pSet->hasSubray;
@@ -556,7 +585,10 @@ void cudaRaytraceCore(uchar4* PBOpos,camera* renderCam, ParameterSet* pSet, int 
   
 
 //  cudaMemcpy(renderCam->shadowVal, cudashadow,(int)renderCam->resolution.x*(int)renderCam->resolution.y*sizeof(glm::vec3), cudaMemcpyDeviceToHost);
-
+  glm::vec3* blurredimage = NULL;
+  cudaMalloc((void**)&blurredimage, (int)renderCam->resolution.x*(int)renderCam->resolution.y*sizeof(glm::vec3));
+  dofBlur<<<fullBlocksPerGrid, threadsPerBlock>>>(renderCam->resolution,(float)iterations,blurredimage, cudaimage, cudahitinfo);
+  cudaMemcpy( cudaimage, blurredimage, (int)renderCam->resolution.x*(int)renderCam->resolution.y*sizeof(glm::vec3), cudaMemcpyDeviceToDevice);
 
   sendImageToPBO<<<fullBlocksPerGrid, threadsPerBlock>>>(PBOpos, renderCam->resolution, cudaimage);
 
@@ -569,6 +601,7 @@ void cudaRaytraceCore(uchar4* PBOpos,camera* renderCam, ParameterSet* pSet, int 
   cudaFree( cudamats );
   cudaFree( cudalights);
   cudaFree( cudahitinfo);
+  cudaFree( blurredimage);
 //  cudaFree( cudashadow);
 
   delete geomList;
