@@ -158,7 +158,7 @@ int scene::loadParameter(){
 			newPset.ks = atof(tokens[1].c_str());
 		}else if(strcmp(tokens[0].c_str(), "KA")==0){
 			newPset.ka = atof(tokens[1].c_str());
-		}else if(strcmp(tokens[0].c_str(), "SHADOWRAYS")==0){
+		}else if(strcmp(tokens[0].c_str(), "TILESIZE")==0){
 			newPset.shadowRays = atoi(tokens[1].c_str());
 		}else if(strcmp(tokens[0].c_str(), "SUBRAY")==0){
 			newPset.hasSubray = atoi(tokens[1].c_str());

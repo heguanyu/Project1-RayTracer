@@ -1,9 +1,9 @@
 PARAMETERS
-KD 1.0
+KD 0.5
 KA 0.1
 KS 10
-SHADOWRAYS  10 //1 for hard shadow,
-SUBRAY    1
+TILESIZE  20 //1 for hard shadow,
+SUBRAY    4
 
 
 MATERIAL 0				//white diffuse
@@ -44,7 +44,7 @@ EMITTANCE   0
 
 MATERIAL 3 				//red glossy
 RGB         .63 .06 .04      
-SPECEX      50  
+SPECEX      100  
 SPECRGB     1 1 1       
 REFL        1       
 REFR        0        
@@ -56,7 +56,7 @@ EMITTANCE   0
 
 MATERIAL 4 				//white glossy
 RGB         1 1 1     
-SPECEX      50  
+SPECEX      100  
 SPECRGB     1 1 1      
 REFL        1       
 REFR        0       
@@ -79,8 +79,8 @@ RSCTCOEFF   13
 EMITTANCE   0
 
 MATERIAL 6 				//green glossy
-RGB         .15 .48 .09      
-SPECEX      50     
+RGB         .0157 .621 .835     
+SPECEX      100     
 SPECRGB     1 1 1
 REFL        1       
 REFR        1        
@@ -194,7 +194,7 @@ OBJECT 8
 cube
 material 8
 frame 0
-TRANS       -2 9.85 0
+TRANS       -2 9.85 3
 ROTAT       0 0 90
 SCALE       .3 3 3
 
@@ -202,6 +202,6 @@ OBJECT 9
 cube
 material 8
 frame 0
-TRANS       2 9.85 0
+TRANS       2 9.85 4
 ROTAT       0 0 90
 SCALE       .3 3 3

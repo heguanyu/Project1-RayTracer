@@ -251,15 +251,13 @@ __global__ void addShadow(glm::vec2 resolution, float time, cameraData cam, int 
 	glm::vec3 tempLight;
 	glm::vec3 lightRaysSum(0,0,0);
 	bool flag=false;
-	int sampleNum=ps.shadowRays;
+
 	float coeff=0;
 	r.origin=final_intersectPoint+0.001f*final_normal;
 	for(int i=0;i<numberOfLights;i++)
 	{
 		
-		if(sampleNum==1)
-			tempLight=lights[i].translation;
-		else
+
 			tempLight=getRandomPoint(lights[i],time*index);
 		r.direction=glm::normalize(tempLight-r.origin);
 		if(glm::dot(final_normal,r.direction)<0) continue;
@@ -424,7 +422,7 @@ void cudaRaytraceCore(uchar4* PBOpos,camera* renderCam, ParameterSet* pSet, int 
   int traceDepth = 1; //determines how many bounces the raytracer traces
 
   // set up crucial magic
-  int tileSize = 16;
+  int tileSize = pSet->shadowRays;	//don't care about this var name. it is tilesize from input file
   int numberOfLights=0;
 
   dim3 threadsPerBlock(tileSize, tileSize);

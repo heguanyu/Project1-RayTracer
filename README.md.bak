@@ -1,0 +1,61 @@
+-------------------------------------------------------------------------------
+CIS565: Project 1: CUDA Raytracer
+-------------------------------------------------------------------------------
+Fall 2013
+-------------------------------------------------------------------------------
+Guanyu He
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Instruction
+-------------------------------------------------------------------------------
+In this project, I introduced a "hacked" Phong ray-tracer in it, instead of recursive 
+ray tracer. I'd implemented these features:
+
+Diffuse surface(see the walls)
+Specular surface(see the red and white sphere)
+Reflective surface(you can see some vague reflection from the red and white spheres)
+Transmittance and refraction(see the blue glass ball)
+Soft shadow(one shadowray per pixel per frame)
+Super Sampling Anti-aliasing: Support at most 4 offset-sampling per pixel
+Area Light(same as above)
+Shadow of a refractive ball(see the shadow of blue glass ball)
+
+With all the effects on, it runs at about 2fps.
+
+-------------------------------------------------------------------------------
+HOW TO USE
+-------------------------------------------------------------------------------
+I added several parameters in the input scene file.
+KA, KD and KS are the coeff for ambient, diffuse and specular color.
+SUBRAY is used for super sampling anti-aliasing feature, 1 for non-anti-aliasing.
+Make sure that subray is between 1 and 4. I do not have sanity input check.
+TILESIZE is used for the performance experiment. On my graphic card(GT550M), it cannot
+exceed 20
+
+-------------------------------------------------------------------------------
+SCREENSHOT AND VIDEO
+-------------------------------------------------------------------------------
+http://youtu.be/npaJjbhM6s8
+The scene do not change while running so it is generally a static image in the video.
+
+-------------------------------------------------------------------------------
+PERFORMANCE EVALUATION
+-------------------------------------------------------------------------------
+I don't know how to make a table or chart in the readme.md(I'm editing with UltraEdit)
+
+Generally my work focus on the ray-tracer it self. As it is pixel-level-parallelization 
+program, it is not easy to introduce the knowledge in the class into this program. 
+
+Anyway, I had tried to tweak the tile size in my program, from 4 to 20. 
+
+1-3 lead to GPU crash because of the time-limited-exceed error and memory crash.
+
+From 4 to 20, the rendering speed generally ramp up a little bit, but the increasing is
+ so trivial to sense without running for like 1000 frams and comparing the time cost.
+ As far as I'd noticed, using tilesize of 20 should be the fastest choice.
+ 
+I'd attemped to use ray-pool method, but it seems to suit better for path-tracing
+implementation. Therefore I would rather leave it in the next assignment. And more
+performance evaluation is promised by then.
+

@@ -2,7 +2,7 @@ PARAMETERS
 KD 0.5
 KA 0.1
 KS 10
-SHADOWRAYS  10 //1 for hard shadow,
+TILESIZE  2 //1 for hard shadow,
 SUBRAY    4
 
 
