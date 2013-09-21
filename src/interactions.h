@@ -38,12 +38,16 @@ __host__ __device__ bool calculateScatterAndAbsorption(ray& r, float& depth, Abs
   return false;
 }
 
+__host__ __device__ glm::vec3 colorMultiply(glm::vec3 c1, glm::vec3 c2)
+{
+	return glm::vec3(c1.x*c2.x,c1.y*c2.y,c1.z*c2.z);
+}
 __host__ __device__ glm::vec3 calculateTransmissionDirection(glm::vec3 normal, glm::vec3 incident, float incidentIOR, float transmittedIOR) {
   
   float eta12=incidentIOR/transmittedIOR;
   float dotNI=glm::dot(normal,incident);
   float delta=1-eta12*eta12*(1-dotNI*dotNI);
-  if(delta<0) return glm::vec3(0,0,0);
+  if(delta<0) return glm::normalize(incident-normal*glm::dot(incident,normal));
   return glm::normalize(normal*(-eta12*dotNI-sqrt(delta))+eta12*incident);
 }
 

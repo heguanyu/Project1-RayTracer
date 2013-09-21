@@ -301,6 +301,7 @@ __global__ void addShadow(glm::vec2 resolution, float time, cameraData cam, int 
 		float ior;
 		int theID;
 		glm::vec3 theHitpoint, thenormal;
+		glm::vec3 transmittancecolor(1,1,1);
 		for(int k=0;k<numberOfGeoms;k++)
 		{
 			if(materials[geoms[k].materialid].emittance>0.01f) continue;
@@ -314,6 +315,7 @@ __global__ void addShadow(glm::vec2 resolution, float time, cameraData cam, int 
 				ior=materials[geoms[k].materialid].indexOfRefraction;
 				theID=k;
 				theHitpoint=intersectPoint;thenormal=normalValue;
+				transmittancecolor=materials[geoms[k].materialid].color;
 			}
 		}
 		ray rr;
@@ -338,6 +340,10 @@ __global__ void addShadow(glm::vec2 resolution, float time, cameraData cam, int 
 			if(mind<0) flag=true;
 		//	if(!flag) {colors[index]=glm::vec3(0,0,0);return;}
 		}
+		else
+		{
+			transmittancecolor=glm::vec3(1,1,1);
+		}
 		if(!flag)
 		{
 			coeff=0;
@@ -350,7 +356,7 @@ __global__ void addShadow(glm::vec2 resolution, float time, cameraData cam, int 
 				coeff=glm::pow(coeff,hitMat.specularExponent)*hitMat.hasReflective*ps.ks;	///specular light intensity
 			
 			coeff+=glm::dot(final_normal,r.direction)*ps.kd;//*f.reflectionCoefficient;    ///Diffuse light intensity
-			accumulateInLight+=materials[lights[i].materialid].color*coeff;
+			accumulateInLight+=colorMultiply(materials[lights[i].materialid].color*coeff,transmittancecolor);
 		}	
 
 		accumulateInLight*=materials[lights[i].materialid].emittance;
@@ -359,7 +365,7 @@ __global__ void addShadow(glm::vec2 resolution, float time, cameraData cam, int 
 	}
 	
 	glm::vec3 matcolor=materials[cudahitinfo[index].firsthitmatid].color;
-	outColor=glm::vec3(matcolor.x*lightRaysSum.x,matcolor.y*lightRaysSum.y,matcolor.z*lightRaysSum.z);
+	outColor=colorMultiply(matcolor,lightRaysSum);//.x,matcolor.y*lightRaysSum.y,matcolor.z*lightRaysSum.z);
 	shadow[index]+=outColor*subraycoeff;
 	colors[index]+=shadow[index]/(time+1)*subraycoeff;
 	
@@ -388,18 +394,25 @@ __global__ void refractionCorrection(glm::vec2 resolution, float time, cameraDat
 	float tempd;
 	glm::vec3 outColor(0,0,0);
 	glm::vec3 dir1=calculateTransmissionDirection(final_normal,cudahitinfo[index].incidentDir,1,hitMat.indexOfRefraction);
-	if(glm::length(dir1)<0.5f)return;
-    glm::vec3 hp1=final_intersectPoint+dir1*0.001f;
-	glm::vec3 hp2,normal2;
-	r.origin=hp1;
-	r.direction=dir1;
-	if(geoms[cudahitinfo[index].hitID].type==0) tempd=sphereIntersection(geoms[cudahitinfo[index].hitID],r,hp2,normal2,0.5f);
-	else if (geoms[cudahitinfo[index].hitID].type==1) tempd=boxIntersection(geoms[cudahitinfo[index].hitID],r,hp2,normal2);
-	normal2=-normal2;
-	glm::vec3 dir2=calculateTransmissionDirection(normal2, dir1,hitMat.indexOfRefraction,1);
-	r.origin=hp2+dir2*0.01f;
-	r.direction=dir2;
-
+	if(glm::length(dir1)<0.5f)
+	{
+		r.origin=cudahitinfo[index].hitPoint+final_normal*0.001f;
+		r.direction=calculateReflectionDirection(final_normal,cudahitinfo[index].incidentDir);
+	}
+	else
+	{
+		glm::vec3 hp1=final_intersectPoint+dir1*0.001f;
+		glm::vec3 hp2,normal2;
+		r.origin=hp1;
+		r.direction=dir1;
+		if(geoms[cudahitinfo[index].hitID].type==0) tempd=sphereIntersection(geoms[cudahitinfo[index].hitID],r,hp2,normal2,0.5f);
+		else if (geoms[cudahitinfo[index].hitID].type==1) tempd=boxIntersection(geoms[cudahitinfo[index].hitID],r,hp2,normal2);
+		normal2=-normal2;
+		glm::vec3 dir2=calculateTransmissionDirection(normal2, dir1,hitMat.indexOfRefraction,1);
+		r.origin=hp2+dir2*0.01f;
+		r.direction=dir2;
+		r.origin-=normal2*0.001f;
+	}
 	staticMaterial targetMat;
 	int hitidx,matid;
 	tempd=findIntersection(index,r,geoms,numberOfGeoms,hitidx,final_intersectPoint,final_normal);

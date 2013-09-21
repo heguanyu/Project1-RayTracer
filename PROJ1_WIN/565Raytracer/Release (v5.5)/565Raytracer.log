@@ -258,7 +258,7 @@ E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(164): warning : variable
 E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(168): warning : variable "isLight" was declared but never referenced
 E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(171): warning : variable "matid" was declared but never referenced
 E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(153): warning : variable "subray" was declared but never referenced
-E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(404): warning : variable "matid" was declared but never referenced
+E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(417): warning : variable "matid" was declared but never referenced
 e:\gitprojects\project1-raytracer\src\intersections.h(266): warning : calling a __host__ function("utilityCore::clampRGB") from a __host__ __device__ function("clampColor") is not allowed
 d:\program files\nvidia gpu computing toolkit\cuda\v5.5\include\math_functions.h : warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
 d:\program files\nvidia gpu computing toolkit\cuda\v5.5\include\math_functions.h(870): warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
@@ -306,7 +306,7 @@ E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(164): warning : variable
 E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(168): warning : variable "isLight" was declared but never referenced
 E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(171): warning : variable "matid" was declared but never referenced
 E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(153): warning : variable "subray" was declared but never referenced
-E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(404): warning : variable "matid" was declared but never referenced
+E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(417): warning : variable "matid" was declared but never referenced
 d:\program files\nvidia gpu computing toolkit\cuda\v5.5\include\math_functions.h : warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
 d:\program files\nvidia gpu computing toolkit\cuda\v5.5\include\math_functions.h(870): warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
 d:\program files\nvidia gpu computing toolkit\cuda\v5.5\include\math_functions.h(1846): warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
