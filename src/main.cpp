@@ -169,6 +169,7 @@ void runCuda(){
       iterations = 0;
       for(int i=0; i<renderCam->resolution.x*renderCam->resolution.y; i++){
         renderCam->image[i] = glm::vec3(0,0,0);
+		renderCam->shadowVal[i] = glm::vec3(0,0,0);
       }
       cudaDeviceReset(); 
       finishedRender = false;

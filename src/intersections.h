@@ -123,7 +123,7 @@ __host__ __device__ float boxIntersection(staticGeom box, ray r, glm::vec3& inte
 
 
  
-  //float radius=0.9;
+  float radius=0.9;
   glm::vec3 ro = multiplyMV(box.inverseTransform, glm::vec4(r.origin,1.0f));
   glm::vec3 rd = glm::normalize(multiplyMV(box.inverseTransform, glm::vec4(r.direction,0.0f)));
   ray rt; rt.origin = ro; rt.direction = rd;

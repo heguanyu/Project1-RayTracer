@@ -251,10 +251,14 @@ e:\gitprojects\project1-raytracer\src\glm\core\func_integer.inl(216): warning : 
 e:\gitprojects\project1-raytracer\src\glm\core\func_integer.inl(278): warning : a __host__ function("glm::bitfieldExtract") redeclared with __host__ __device__, hence treated as a __host__ __device__ function
 e:\gitprojects\project1-raytracer\src\glm\core\func_integer.inl(339): warning : a __host__ function("glm::bitfieldInsert") redeclared with __host__ __device__, hence treated as a __host__ __device__ function
 e:\gitprojects\project1-raytracer\src\glm\core\func_integer.inl(407): warning : a __host__ function("glm::bitfieldReverse") redeclared with __host__ __device__, hence treated as a __host__ __device__ function
+e:\gitprojects\project1-raytracer\src\intersections.h(126): warning : variable "radius" was declared but never referenced
 e:\gitprojects\project1-raytracer\src\intersections.h(273): warning : missing return statement at end of non-void function "getRandomPoint"
-E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(133): warning : variable "isLight" was set but never used
-E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(198): warning : variable "isLight" was set but never used
-E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(345): warning : variable "isLight" was set but never used
+E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(120): warning : variable "isLight" was declared but never referenced
+E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(164): warning : variable "mindist" was declared but never referenced
+E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(168): warning : variable "isLight" was declared but never referenced
+E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(171): warning : variable "matid" was declared but never referenced
+E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(153): warning : variable "subray" was declared but never referenced
+E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(377): warning : variable "matid" was declared but never referenced
 e:\gitprojects\project1-raytracer\src\intersections.h(266): warning : calling a __host__ function("utilityCore::clampRGB") from a __host__ __device__ function("clampColor") is not allowed
 d:\program files\nvidia gpu computing toolkit\cuda\v5.5\include\math_functions.h : warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
 d:\program files\nvidia gpu computing toolkit\cuda\v5.5\include\math_functions.h(870): warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
@@ -295,10 +299,14 @@ d:\program files\nvidia gpu computing toolkit\cuda\v5.5\include\device_functions
 d:\program files\nvidia gpu computing toolkit\cuda\v5.5\include\device_functions.h(1659): warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
 d:\program files\nvidia gpu computing toolkit\cuda\v5.5\include\sm_13_double_functions.h : warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
 e:\gitprojects\project1-raytracer\src\glm\core\_swizzle.hpp(194): warning : missing return statement at end of non-void function "glm::detail::_swizzle_base2<ValueType, VecType, N, E0, E1, E2, E3, 1>::operator=(const glm::detail::_swizzle_base2<ValueType, VecType, N, E0, E1, E2, E3, 1>::Stub &)"
+e:\gitprojects\project1-raytracer\src\intersections.h(126): warning : variable "radius" was declared but never referenced
 e:\gitprojects\project1-raytracer\src\intersections.h(273): warning : missing return statement at end of non-void function "getRandomPoint"
-E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(133): warning : variable "isLight" was set but never used
-E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(198): warning : variable "isLight" was set but never used
-E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(345): warning : variable "isLight" was set but never used
+E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(120): warning : variable "isLight" was declared but never referenced
+E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(164): warning : variable "mindist" was declared but never referenced
+E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(168): warning : variable "isLight" was declared but never referenced
+E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(171): warning : variable "matid" was declared but never referenced
+E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(153): warning : variable "subray" was declared but never referenced
+E:/gitprojects/Project1-RayTracer/src/raytraceKernel.cu(377): warning : variable "matid" was declared but never referenced
 d:\program files\nvidia gpu computing toolkit\cuda\v5.5\include\math_functions.h : warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
 d:\program files\nvidia gpu computing toolkit\cuda\v5.5\include\math_functions.h(870): warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
 d:\program files\nvidia gpu computing toolkit\cuda\v5.5\include\math_functions.h(1846): warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
@@ -315,9 +323,9 @@ d:\program files\nvidia gpu computing toolkit\cuda\v5.5\include\sm_13_double_fun
 e:\gitprojects\project1-raytracer\src\glm\./core/func_common.hpp : warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
 e:\gitprojects\project1-raytracer\src\glm\core\func_common.inl : warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
 e:\gitprojects\project1-raytracer\src\glm\./core/func_integer.hpp : warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
-D:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v5.5\include\thrust/detail/pair.inl(37): warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
+D:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v5.5\include\thrust/detail/pair.inl(21): warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
 e:\gitprojects\project1-raytracer\src\intersections.h(273): warning C4715: 'getRandomPoint' : not all control paths return a value
-D:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v5.5\include\thrust/pair.h(167): warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
+D:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v5.5\include\thrust/pair.h(125): warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
 d:\program files\nvidia gpu computing toolkit\cuda\v5.5\include\math_functions.h : warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
 d:\program files\nvidia gpu computing toolkit\cuda\v5.5\include\math_functions.h(870): warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
 d:\program files\nvidia gpu computing toolkit\cuda\v5.5\include\math_functions.h(1846): warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
@@ -327,6 +335,11 @@ d:\program files\nvidia gpu computing toolkit\cuda\v5.5\include\math_functions.h
 d:\program files\nvidia gpu computing toolkit\cuda\v5.5\include\math_functions.h(5501): warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
 d:\program files\nvidia gpu computing toolkit\cuda\v5.5\include\math_functions.h(6407): warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
 d:\program files\nvidia gpu computing toolkit\cuda\v5.5\include\math_functions.h(7316): warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
+  glslUtility.cpp
+  image.cpp
+e:\gitprojects\project1-raytracer\src\glm\./core/func_common.hpp : warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
+e:\gitprojects\project1-raytracer\src\glm\core\func_common.inl : warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
+e:\gitprojects\project1-raytracer\src\glm\./core/func_integer.hpp : warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
   main.cpp
   Note: including lib: glut32.lib
   
@@ -344,17 +357,23 @@ e:\gitprojects\project1-raytracer\src\glm\./core/func_integer.hpp : warning C481
 ..\..\src\scene.cpp(158): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
 ..\..\src\scene.cpp(160): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
 ..\..\src\scene.cpp(148): warning C4101: 'fovy' : unreferenced local variable
-..\..\src\scene.cpp(182): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-..\..\src\scene.cpp(188): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-..\..\src\scene.cpp(238): warning C4244: 'initializing' : conversion from 'double' to 'float', possible loss of data
+..\..\src\scene.cpp(184): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+..\..\src\scene.cpp(190): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
 ..\..\src\scene.cpp(240): warning C4244: 'initializing' : conversion from 'double' to 'float', possible loss of data
-..\..\src\scene.cpp(275): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-..\..\src\scene.cpp(280): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-..\..\src\scene.cpp(282): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+..\..\src\scene.cpp(242): warning C4244: 'initializing' : conversion from 'double' to 'float', possible loss of data
+..\..\src\scene.cpp(279): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
 ..\..\src\scene.cpp(284): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
 ..\..\src\scene.cpp(286): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-..\..\src\scene.cpp(291): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-..\..\src\scene.cpp(293): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+..\..\src\scene.cpp(288): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+..\..\src\scene.cpp(290): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+..\..\src\scene.cpp(295): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+..\..\src\scene.cpp(297): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+  utilities.cpp
+e:\gitprojects\project1-raytracer\src\glm\./core/func_common.hpp : warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
+e:\gitprojects\project1-raytracer\src\glm\core\func_common.inl : warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
+e:\gitprojects\project1-raytracer\src\glm\./core/func_integer.hpp : warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
+  stb_image.c
+  stb_image_write.c
   Generating code
   Finished generating code
   565Raytracer.vcxproj -> E:\gitprojects\Project1-RayTracer\PROJ1_WIN\Release (v5.5)\565Raytracer.exe

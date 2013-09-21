@@ -148,7 +148,7 @@ int scene::loadParameter(){
 	float fovy;
 	
 	//load static properties
-	for(int i=0; i<4; i++){
+	for(int i=0; i<5; i++){
 		string line;
         utilityCore::safeGetline(fp_in,line);
 		vector<string> tokens = utilityCore::tokenizeString(line);
@@ -160,6 +160,8 @@ int scene::loadParameter(){
 			newPset.ka = atof(tokens[1].c_str());
 		}else if(strcmp(tokens[0].c_str(), "SHADOWRAYS")==0){
 			newPset.shadowRays = atoi(tokens[1].c_str());
+		}else if(strcmp(tokens[0].c_str(), "SUBRAY")==0){
+			newPset.hasSubray = atoi(tokens[1].c_str());
 		}
 	}
 	parameterSet=newPset;
@@ -244,9 +246,11 @@ int scene::loadCamera(){
 	
 	//set up render camera stuff
 	renderCam.image = new glm::vec3[(int)renderCam.resolution.x*(int)renderCam.resolution.y];
+	renderCam.shadowVal = new glm::vec3[(int)renderCam.resolution.x*(int)renderCam.resolution.y];
 	renderCam.rayList = new ray[(int)renderCam.resolution.x*(int)renderCam.resolution.y];
 	for(int i=0; i<renderCam.resolution.x*renderCam.resolution.y; i++){
 		renderCam.image[i] = glm::vec3(0,0,0);
+		renderCam.shadowVal[i]=glm::vec3(0,0,0);
 	}
 	
 	cout << "Loaded " << frameCount << " frames for camera!" << endl;

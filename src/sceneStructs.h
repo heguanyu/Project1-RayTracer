@@ -15,13 +15,25 @@ enum GEOMTYPE{ SPHERE, CUBE, MESH };
 struct ParameterSet
 {
 	float ks,kd,ka;
-	int shadowRays;
+	int shadowRays, hasSubray;
 };
 struct ray {
 	glm::vec3 origin;
 	glm::vec3 direction;
 };
-
+struct parallelRay
+{
+	glm::vec3 origin;
+	glm::vec3 direction;
+	int index;
+	int iters;
+	float coeff;
+};
+struct vec6
+{
+	glm::vec3 point;
+	glm::vec3 normal;
+};
 struct geom {
 	enum GEOMTYPE type;
 	int materialid;
@@ -61,6 +73,7 @@ struct camera {
 	glm::vec2 fov;
 	unsigned int iterations;
 	glm::vec3* image;
+	glm::vec3* shadowVal;
 	ray* rayList;
 	std::string imageName;
 	float ambient;
