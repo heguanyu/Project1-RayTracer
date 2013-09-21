@@ -13,12 +13,19 @@ In this project, I introduced a "hacked" Phong ray-tracer in it, instead of recu
 ray tracer. I'd implemented the following features:
 
 Diffuse surface(see the walls)
+
 Specular surface(see the red and white sphere)
+
 Reflective surface(you can see some vague reflection from the red and white spheres)
+
 Transmittance and refraction(see the blue glass ball)
+
 Soft shadow(one shadowray per pixel per frame)
+
 Super Sampling Anti-aliasing: Support at most 4 offset-sampling per pixel
+
 Area Light(same as above)
+
 Shadow of a refractive ball(see the shadow of blue glass ball)
 
 With all the effects on, it runs at about 2fps.
@@ -27,9 +34,13 @@ With all the effects on, it runs at about 2fps.
 HOW TO USE
 -------------------------------------------------------------------------------
 I added several parameters in the input scene file.
+
 KA, KD and KS are the coeff for ambient, diffuse and specular color.
+
 SUBRAY is used for super sampling anti-aliasing feature, 1 for non-anti-aliasing.
+
 Make sure that subray is between 1 and 4. I do not have sanity input check.
+
 TILESIZE is used for the performance experiment. On my graphic card(GT550M), it cannot
 exceed 20
 
@@ -37,6 +48,7 @@ exceed 20
 SCREENSHOT AND VIDEO
 -------------------------------------------------------------------------------
 http://youtu.be/npaJjbhM6s8
+
 The scene do not change while running so it is generally a static image in the video.
 
 -------------------------------------------------------------------------------

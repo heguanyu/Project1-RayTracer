@@ -10,7 +10,7 @@ Guanyu He
 Instruction
 -------------------------------------------------------------------------------
 In this project, I introduced a "hacked" Phong ray-tracer in it, instead of recursive 
-ray tracer. I'd implemented these features:
+ray tracer. I'd implemented the following features:
 
 Diffuse surface(see the walls)
 Specular surface(see the red and white sphere)
